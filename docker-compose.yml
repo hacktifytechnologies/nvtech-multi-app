@@ -1,0 +1,128 @@
+version: '3.8'
+
+services:
+  # Target App: The real goal (Port 8090)
+  project-portal:
+    build: ./target-app
+    ports: ["8009:8080"]
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASSWORD=multi_pass_2024
+      - DB_NAME=nvtech_multi_app
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [nvtech-net]
+
+  # Distraction Apps: The noise
+  portal:
+    build: ./distraction-app
+    ports: ["80:8000"]
+    environment:
+      - APP_NAME=NVTech Shared Resources
+      - APP_DATA=Welcome to SHR-CORE-02,Internal Segment Only,Unauthorized access is recorded
+    networks: [nvtech-net]
+
+  asset-tracker:
+    build: ./distraction-app
+    ports: ["8001:8000"]
+    environment:
+      - APP_NAME=Asset Management
+      - APP_ICON=📦
+      - APP_DATA=Laptop-402 (Active),Server-R740 (Staging),Switch-L3 (Maintenance)
+    networks: [nvtech-net]
+
+  inventory:
+    build: ./distraction-app
+    ports: ["8002:8000"]
+    environment:
+      - APP_NAME=Inventory System
+      - APP_ICON=📊
+      - APP_DATA=Fiber Optic Cables (High),SFP Modules (Low),Network Racks (Stable)
+    networks: [nvtech-net]
+
+  payroll:
+    build: ./distraction-app
+    ports: ["8003:8000"]
+    environment:
+      - APP_NAME=Payroll Mirror
+      - APP_ICON=💰
+      - APP_DATA=Monthly Statements ready,Benefit enrollment open,Tax documents locked
+    networks: [nvtech-net]
+
+  vendor-board:
+    build: ./distraction-app
+    ports: ["8004:8000"]
+    environment:
+      - APP_NAME=Vendor Management
+      - APP_ICON=🤝
+      - APP_DATA=Cloud Provider X (Operational),Security Audit Y (Pending)
+    networks: [nvtech-net]
+
+  # Hint Port: Port 8005 contains the "Hacker's Hint"
+  internal-notes:
+    build: ./distraction-app
+    ports: ["8005:8000"]
+    environment:
+      - APP_NAME=Internal Engineering Notes
+      - APP_ICON=📝
+      - "APP_DATA=LEGACY PORTAL NOTE: The Project Access Portal uses imperfect recursive sanitization. We found that ....// traversal still works. Also - ensure all requests have a valid doc extension check like .pdf or .docx or they will fail the whitelist."
+    networks: [nvtech-net]
+
+  reporting:
+    build: ./distraction-app
+    ports: ["8006:8000"]
+    environment:
+      - APP_NAME=Reporting Console
+      - APP_ICON=📈
+      - APP_DATA=Uptime 99.9%,Resource usage steady
+    networks: [nvtech-net]
+
+  ticket-center:
+    build: ./distraction-app
+    ports: ["8007:8000"]
+    environment:
+      - APP_NAME=Service Ticket Center
+      - APP_ICON=🎫
+      - "APP_DATA=TCK-900: Migration help,TCK-904: VPN setup"
+    networks: [nvtech-net]
+
+  qa-panel:
+    build: ./distraction-app
+    ports: ["8008:8000"]
+    environment:
+      - APP_NAME=QA Panel
+      - APP_ICON=🧪
+      - APP_DATA=v2.4 testing complete,Integration tests passed
+    networks: [nvtech-net]
+
+  admin-docs:
+    build: ./distraction-app
+    ports: ["8010:8000"]
+    environment:
+      - APP_NAME=Administrative Resources
+      - APP_ICON=⚙️
+      - APP_DATA=System Manuals v4,Recovery Procedures
+    networks: [nvtech-net]
+
+  # Shared Database
+  db:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=multi_pass_2024
+      - MYSQL_DATABASE=nvtech_multi_app
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pmulti_pass_2024"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [nvtech-net]
+
+networks:
+  nvtech-net:
+    driver: bridge
